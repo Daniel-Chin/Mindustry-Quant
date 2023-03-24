@@ -1,7 +1,4 @@
 from typing import *
-import math
-
-from console import console
 
 class Multipliable:
     def __init__(self, num=1) -> None:
@@ -184,4 +181,5 @@ def displayMM(x: MM, /):
 print('One full-time', ShipAssembler.__name__, 'needs (/sec):')
 displayMM(breakdown(Disrupt(1 / ShipAssembler.build_time)))
 
+from console import console
 console(globals())
