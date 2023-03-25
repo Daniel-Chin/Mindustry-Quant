@@ -43,6 +43,8 @@ class Thorium(Resource): pass
 class Carbide(Resource): pass
 class SurgeAlloy(Resource): pass
 class Hydrogen(Resource): pass
+class Arkycite(Resource): pass
+class Cyanogen(Resource): pass
 class Heat(Resource): pass
 
 class Source(Multipliable): 
@@ -53,8 +55,12 @@ class Source(Multipliable):
     def outItems() -> Multipliable:
         raise NotImplementedError()
 
-sourceOf: Dict[Type[Resource], Type[Source]] = {}
+sourceOf: Dict[Type[Multipliable], Type[Source]] = {}
+def register(SourceClass: Type[Source]):
+    sourceOf[SourceClass.outItems().__class__] = SourceClass
+    return SourceClass
 
+@register
 class GraphitePlasmaBore(Source):
     @staticmethod
     def inItems() -> MM:
@@ -62,7 +68,7 @@ class GraphitePlasmaBore(Source):
     @staticmethod
     def outItems() -> Multipliable:
         return Graphite(.75 * 2.5)
-sourceOf[Graphite] = GraphitePlasmaBore
+@register
 class BerylliumPlasmaBore(Source):
     @staticmethod
     def inItems() -> MM:
@@ -70,8 +76,8 @@ class BerylliumPlasmaBore(Source):
     @staticmethod
     def outItems() -> Multipliable:
         return Beryllium(.75 * 2.5)
-sourceOf[Beryllium] = BerylliumPlasmaBore
 
+@register
 class SiliconArcFurnance(Source):
     @staticmethod
     def inItems() -> MM:
@@ -79,8 +85,8 @@ class SiliconArcFurnance(Source):
     @staticmethod
     def outItems() -> Multipliable:
         return Silicon(4.8)
-sourceOf[Silicon] = SiliconArcFurnance
 
+@register
 class CarbideCrucible400(Source):
     @staticmethod
     def inItems() -> MM:
@@ -92,15 +98,32 @@ class CarbideCrucible400(Source):
     @staticmethod
     def outItems() -> Multipliable:
         return Carbide(.44 * 4)
-sourceOf[Carbide] = CarbideCrucible400
+
+@register
+class CyanogenSynthesizer400(Source):
+    @staticmethod
+    def inItems() -> MM:
+        return {
+            Arkycite: 40 * 4, 
+            Graphite: .75 * 4, 
+            Heat: 5 * 4, 
+        }
+    @staticmethod
+    def outItems() -> Multipliable:
+        return Cyanogen(3 * 4)
 
 class Unit(Multipliable): pass
 
 class LargeCarbideWall(Unit): pass
+
+class Stell(Unit): pass
+class Locus(Unit): pass
+class Conquer(Unit): pass
 class Elude(Unit): pass
 class Avert(Unit): pass
 class Disrupt(Unit): pass
 
+@register
 class CarbideConstructor(Source):
     build_time = 5
     @staticmethod
@@ -112,8 +135,50 @@ class CarbideConstructor(Source):
     @staticmethod
     def outItems() -> Multipliable:
         return LargeCarbideWall(1 / __class__.build_time)
-sourceOf[LargeCarbideWall] = CarbideConstructor
 
+@register
+class TankFabricator(Source):
+    build_time = 35
+    @staticmethod
+    def inItems() -> MM:
+        return {
+            Beryllium: 40 / __class__.build_time, 
+            Silicon: 50 / __class__.build_time, 
+        }
+    @staticmethod
+    def outItems() -> Multipliable:
+        return Stell(1 / __class__.build_time)
+
+@register
+class TankRefabricator(Source):
+    build_time = 30
+    @staticmethod
+    def inItems() -> MM:
+        return {
+            Stell: 1 / __class__.build_time, 
+            Hydrogen: 3, 
+            Silicon: 1.33, 
+            Tungsten: 1, 
+        }
+    @staticmethod
+    def outItems() -> Multipliable:
+        return Locus(1 / __class__.build_time)
+
+@register
+class TankAssembler(Source):
+    build_time = 180
+    @staticmethod
+    def inItems() -> MM:
+        return {
+            Locus: 6 / __class__.build_time, 
+            LargeCarbideWall: 20 / __class__.build_time, 
+            Cyanogen: 9, 
+        }
+    @staticmethod
+    def outItems() -> Multipliable:
+        return Conquer(1 / __class__.build_time)
+
+@register
 class ShipFabricator(Source):
     build_time = 40
     @staticmethod
@@ -125,8 +190,8 @@ class ShipFabricator(Source):
     @staticmethod
     def outItems() -> Multipliable:
         return Elude(1 / __class__.build_time)
-sourceOf[Elude] = ShipFabricator
 
+@register
 class ShipRefabricator(Source):
     build_time = 50
     @staticmethod
@@ -140,8 +205,8 @@ class ShipRefabricator(Source):
     @staticmethod
     def outItems() -> Multipliable:
         return Avert(1 / __class__.build_time)
-sourceOf[Avert] = ShipRefabricator
 
+@register
 class ShipAssembler(Source):
     build_time = 180
     @staticmethod
@@ -149,11 +214,11 @@ class ShipAssembler(Source):
         return {
             Avert: 6 / __class__.build_time, 
             LargeCarbideWall: 20 / __class__.build_time, 
+            Cyanogen: 12, 
         }
     @staticmethod
     def outItems() -> Multipliable:
         return Disrupt(1 / __class__.build_time)
-sourceOf[Disrupt] = ShipAssembler
 
 def breakdown(x: Multipliable, /) -> MM:
     TX = type(x)
@@ -178,8 +243,11 @@ def displayMM(x: MM, /):
     print('{', *map(MMItem2Instance, x.items()), sep='\n  ')
     print('}')
 
-print('One full-time', ShipAssembler.__name__, 'needs (/sec):')
-displayMM(breakdown(Disrupt(1 / ShipAssembler.build_time)))
+# print('One full-time', ShipAssembler.__name__, 'needs (/sec):')
+# displayMM(breakdown(Disrupt(1 / ShipAssembler.build_time)))
+
+print('One full-time', TankAssembler.__name__, 'needs (/sec):')
+displayMM(breakdown(Conquer(1 / TankAssembler.build_time)))
 
 from console import console
 console(globals())
