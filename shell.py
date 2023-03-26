@@ -38,12 +38,16 @@ class Beryllium(Drillable23): pass
 class Graphite(Drillable23): pass
 class Sand(Resource): pass
 class Tungsten(Resource): pass
+class Oxide(Resource): pass
 class Silicon(Resource): pass
 class Thorium(Resource): pass
 class Carbide(Resource): pass
 class SurgeAlloy(Resource): pass
+class PhaseFabric(Resource): pass
 class Hydrogen(Resource): pass
+class Ozone(Resource): pass
 class Arkycite(Resource): pass
+class Slag(Resource): pass
 class Cyanogen(Resource): pass
 class Heat(Resource): pass
 
@@ -87,6 +91,15 @@ class SiliconArcFurnance(Source):
         return Silicon(4.8)
 
 @register
+class OxidationChamber(Source):
+    @staticmethod
+    def inItems() -> MM:
+        return {Ozone: 2, Beryllium: .5}
+    @staticmethod
+    def outItems() -> Multipliable:
+        return Oxide(.5)
+
+@register
 class CarbideCrucible400(Source):
     @staticmethod
     def inItems() -> MM:
@@ -98,6 +111,19 @@ class CarbideCrucible400(Source):
     @staticmethod
     def outItems() -> Multipliable:
         return Carbide(.44 * 4)
+
+@register
+class SurgeCrucible400(Source):
+    @staticmethod
+    def inItems() -> MM:
+        return {
+            Silicon: 1 * 4, 
+            Slag: 40 * 4, 
+            Heat: 10 * 4, 
+        }
+    @staticmethod
+    def outItems() -> Multipliable:
+        return Carbide(.33 * 4)
 
 @register
 class CyanogenSynthesizer400(Source):
@@ -112,6 +138,20 @@ class CyanogenSynthesizer400(Source):
     def outItems() -> Multipliable:
         return Cyanogen(3 * 4)
 
+@register
+class PhaseSynthesizer400(Source):
+    @staticmethod
+    def inItems() -> MM:
+        return {
+            Thorium: 1 * 4, 
+            Sand: 3 * 4, 
+            Ozone: 2 * 4, 
+            Heat: 8 * 4, 
+        }
+    @staticmethod
+    def outItems() -> Multipliable:
+        return PhaseFabric(.5 * 4)
+
 class Unit(Multipliable): pass
 
 class LargeCarbideWall(Unit): pass
@@ -123,8 +163,11 @@ class Elude(Unit): pass
 class Avert(Unit): pass
 class Disrupt(Unit): pass
 
+class UnitSource(Source): 
+    build_time = None
+
 @register
-class CarbideConstructor(Source):
+class CarbideConstructor(UnitSource):
     build_time = 5
     @staticmethod
     def inItems() -> MM:
@@ -137,7 +180,7 @@ class CarbideConstructor(Source):
         return LargeCarbideWall(1 / __class__.build_time)
 
 @register
-class TankFabricator(Source):
+class TankFabricator(UnitSource):
     build_time = 35
     @staticmethod
     def inItems() -> MM:
@@ -150,7 +193,7 @@ class TankFabricator(Source):
         return Stell(1 / __class__.build_time)
 
 @register
-class TankRefabricator(Source):
+class TankRefabricator(UnitSource):
     build_time = 30
     @staticmethod
     def inItems() -> MM:
@@ -165,7 +208,7 @@ class TankRefabricator(Source):
         return Locus(1 / __class__.build_time)
 
 @register
-class TankAssembler(Source):
+class TankAssembler(UnitSource):
     build_time = 180
     @staticmethod
     def inItems() -> MM:
@@ -179,7 +222,7 @@ class TankAssembler(Source):
         return Conquer(1 / __class__.build_time)
 
 @register
-class ShipFabricator(Source):
+class ShipFabricator(UnitSource):
     build_time = 40
     @staticmethod
     def inItems() -> MM:
@@ -192,7 +235,7 @@ class ShipFabricator(Source):
         return Elude(1 / __class__.build_time)
 
 @register
-class ShipRefabricator(Source):
+class ShipRefabricator(UnitSource):
     build_time = 50
     @staticmethod
     def inItems() -> MM:
@@ -207,7 +250,7 @@ class ShipRefabricator(Source):
         return Avert(1 / __class__.build_time)
 
 @register
-class ShipAssembler(Source):
+class ShipAssembler(UnitSource):
     build_time = 180
     @staticmethod
     def inItems() -> MM:
@@ -243,11 +286,26 @@ def displayMM(x: MM, /):
     print('{', *map(MMItem2Instance, x.items()), sep='\n  ')
     print('}')
 
-# print('One full-time', ShipAssembler.__name__, 'needs (/sec):')
-# displayMM(breakdown(Disrupt(1 / ShipAssembler.build_time)))
+def fullTime(x: Type[Source], /, mult=1):
+    print('One full-time', x.__name__, 'needs (/sec):')
+    OutType = x.outItems().__class__
+    if issubclass(x, UnitSource):
+        num = 1 / x.build_time
+    else:
+        num = x.outItems().num
+    displayMM(breakdown(OutType(num * mult)))
+    print()
 
-print('One full-time', TankAssembler.__name__, 'needs (/sec):')
-displayMM(breakdown(Conquer(1 / TankAssembler.build_time)))
+fullTime(ShipAssembler)
+fullTime(TankAssembler)
+fullTime(OxidationChamber, 6)
+fullTime(SurgeCrucible400)
+fullTime(PhaseSynthesizer400)
 
-from console import console
-console(globals())
+try:
+    from console import console
+except ImportError:
+    import IPython
+    IPython.embed()
+else:
+    console(globals())
