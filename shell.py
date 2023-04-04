@@ -23,6 +23,10 @@ def MMItem2Instance(x: Tuple[Type[Multipliable], int], /):
     return MType(num)
 
 def merge(*mms: MM) -> MM:
+    if len(mms) == 0:
+        return { }
+    if len(mms) == 1:
+        return mms[0]
     if len(mms) == 2:
         a, b = mms
         s: MM = {}
@@ -296,16 +300,17 @@ def fullTime(x: Type[Source], /, mult=1):
     displayMM(breakdown(OutType(num * mult)))
     print()
 
-fullTime(ShipAssembler)
-fullTime(TankAssembler)
-fullTime(OxidationChamber, 6)
-fullTime(SurgeCrucible400)
-fullTime(PhaseSynthesizer400)
+if __name__ == '__main__':
+    fullTime(ShipAssembler)
+    fullTime(TankAssembler)
+    fullTime(OxidationChamber, 6)
+    fullTime(SurgeCrucible400)
+    fullTime(PhaseSynthesizer400)
 
-try:
-    from console import console
-except ImportError:
-    import IPython
-    IPython.embed()
-else:
-    console(globals())
+    try:
+        from console import console
+    except ImportError:
+        import IPython
+        IPython.embed()
+    else:
+        console(globals())
