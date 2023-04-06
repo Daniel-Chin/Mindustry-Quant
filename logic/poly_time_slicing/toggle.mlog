@@ -1,0 +1,6 @@
+sensor user_active switch2 @enabled
+jump 4 strictEqual user_active false
+control enabled switch1 1 0 0 0
+wait 0.05
+control enabled switch1 0 0 0 0
+wait 0.1

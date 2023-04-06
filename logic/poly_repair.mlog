@@ -1,0 +1,38 @@
+// There is a race condition but who cares
+
+set FLAG_CONTROLLED 233
+
+ubind @poly
+
+sensor poly_flag @unit @flag
+jump FOUND_NEW_POLY notEqual poly_flag FLAG_CONTROLLED
+end
+
+FOUND_NEW_POLY:
+ucontrol flag FLAG_CONTROLLED 0 0 0 0
+sensor MY_RANGE @unit @range
+op sub APPROACH MY_RANGE 3
+sensor MY_MAX_HP @unit @maxHealth
+op mul THRESHOLD MY_MAX_HP 0.5
+
+LOOP:
+    sensor my_hp @unit @health
+    jump HEAL lessThan my_hp THRESHOLD
+
+    ulocate damaged core true @copper d_x d_y d_found d_building
+    jump HEAL strictEqual d_found false
+    REPAIR:
+        ucontrol approach d_x d_y APPROACH 0 0
+        ucontrol target d_x d_y APPROACH 0 0
+        jump LOOP always 0 0
+    END_REPAIR:
+
+    HEAL:
+        ulocate building repair false @copper rx ry rf rb
+        ucontrol move rx ry 0 0 0
+        jump LOOP always 0 0
+    END_HEAL:
+jump LOOP always 0 0
+
+END:
+end

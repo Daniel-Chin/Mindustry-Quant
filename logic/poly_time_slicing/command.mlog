@@ -1,0 +1,57 @@
+// get_player.mlog
+    ubind @alpha
+    jump BETA strictEqual @unit null
+    jump OK always 0 0
+    BETA:
+    ubind @beta
+    jump GAMMA strictEqual @unit null
+    jump OK always 0 0
+    GAMMA:
+    ubind @gamma
+    OK:
+    set the_player @unit
+
+ubind @poly
+sensor is_active switch1 @enabled
+jump AUTO strictEqual is_active false
+sensor MY_RANGE @unit @range
+op sub APPROACH MY_RANGE 3
+op mul CLOSER MY_RANGE 0.5
+OVERRIDE:
+    sensor my_hp @unit @health
+    sensor my_max_hp @unit @maxHealth
+    op mul threshold my_max_hp 0.5
+    ulocate building repair false @copper rx ry rf rb
+    jump HEAL lessThan my_hp threshold
+    ulocate damaged core true @copper d_x d_y d_found d_building
+    jump REPAIR strictEqual d_found true
+    FOLLOW:
+        sensor player_x the_player @x
+        sensor player_y the_player @y
+        jump X_R_P lessThan rx player_x
+        X_P_R:
+            op add target_x player_x CLOSER
+        jump END_X always 0 0
+        X_R_P:
+            op sub target_x player_x CLOSER
+        END_X:
+        jump Y_R_P lessThan ry player_y
+        Y_P_R:
+            op add target_y player_y CLOSER
+        jump END_Y always 0 0
+        Y_R_P:
+            op sub target_y player_y CLOSER
+        END_Y:
+        ucontrol move target_x target_y 0 0 0
+    end
+    REPAIR:
+        ucontrol approach d_x d_y APPROACH 0 0
+        ucontrol target d_x d_y APPROACH 0 0
+    end
+    HEAL:
+        ucontrol move rx ry 0 0 0
+    end
+end
+AUTO:
+    ucontrol unbind 0 0 0 0 0
+end

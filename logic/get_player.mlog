@@ -1,0 +1,11 @@
+ubind @alpha
+jump BETA strictEqual @unit null
+jump OK always 0 0
+BETA:
+ubind @beta
+jump GAMMA strictEqual @unit null
+jump OK always 0 0
+GAMMA:
+ubind @gamma
+OK:
+set the_player @unit

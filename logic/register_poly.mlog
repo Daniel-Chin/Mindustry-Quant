@@ -1,0 +1,23 @@
+// doesn't work. I though memory cells could hold ref to units
+
+set MAX 99
+set i 0
+LOOP_0:
+    read slot cell1 i
+    jump FILL strictEqual slot null
+    op add i i 1
+jump LOOP_0 lessThan i MAX
+end
+FILL:
+    set to_fill i
+    UBIND:
+        ubind @poly
+        set i 0
+        LOOP_1:
+            read slot cell1 i
+            jump UBIND strictEqual slot @unit
+            op add i i 1
+        jump LOOP_1 lessThan i to_fill
+        write @unit cell1 to_fill
+    end
+end
